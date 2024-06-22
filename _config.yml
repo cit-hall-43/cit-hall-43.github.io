@@ -18,8 +18,8 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: 台北市召會43會所
-email: tk.fang@gmail.com
+title: 台北市召會43會所 1-4小區
+email: churchintaipei@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   神人調和，繁茂復活.
 baseurl: "" # the subpath of your site, e.g. /blog
