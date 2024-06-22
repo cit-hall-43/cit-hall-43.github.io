@@ -22,7 +22,7 @@ title: 台北市召會43會所 1-4小區
 email: churchintaipei@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   神人調和，繁茂復活.
-baseurl: "" # the subpath of your site, e.g. /blog
+baseurl: "https://cit-hall-43.github.io" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: jekyllrb
 github_username:  cit-hall-43
