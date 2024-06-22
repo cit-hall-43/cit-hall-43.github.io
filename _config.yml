@@ -28,7 +28,7 @@ twitter_username: jekyllrb
 github_username:  cit-hall-43
 
 # Build settings
-theme: jekyll-theme-dinky
+theme: minima
 #remote_theme: pages-themes/merlot@v0.2.0
 plugins:
   - jekyll-feed
