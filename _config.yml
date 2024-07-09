@@ -12,10 +12,10 @@ linkedin_username: linkedin
 facebook_username: facebook
 
 # External API
-giscus_repo: "byanko55/jekyll-theme-satellite"
-giscus_repoId: "R_kgDOJ6fqWg"
+giscus_repo: "cit-hall-43/cit-hall-43.github.io"
+giscus_repoId: "R_kgDOMMsGHA"
 giscus_category: "Q&A"
-giscus_categoryId: "DIC_kwDOJ6fqWs4Cc7p7"
+giscus_categoryId: "DIC_kwDOMMsGHM4CgqXM"
 goatcounter_code: cit-hall-43
 google_analytics:
 
