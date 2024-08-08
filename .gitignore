@@ -7,3 +7,6 @@ _site/
 *.gem
 Gemfile.lock
 vendor
+
+# Jupyter Notebook
+.ipynb_checkpoints
