@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>國小數學遊戲 - 乘除法練習</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+      background-color: #add8e6; /* 淡藍色背景 */
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+    }
+    #question {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+    #timer {
+      font-size: 20px;
+      margin: 10px 0;
+    }
+    #result {
+      font-size: 22px;
+      margin: 20px 0;
+    }
+    input[type="number"] {
+      width: 100px;
+      padding: 5px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 10px;
+    }
+    /* 動畫效果：當得分為 100 時，結果文字放大並變色 */
+    .celebrate {
+      animation: celebrateAnim 2s ease-in-out forwards;
+    }
+    @keyframes celebrateAnim {
+      0% {
+        transform: scale(1);
+        color: black;
+      }
+      50% {
+        transform: scale(1.5);
+        color: red;
+      }
+      100% {
+        transform: scale(1.2);
+        color: green;
+      }
+    }
+    /* 列出題目的區塊 */
+    .question-log {
+      text-align: left;
+      margin-top: 30px;
+    }
+    .question-log li {
+      margin-bottom: 8px;
+    }
+    .wrong {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="game">
+    <h1>國小數學遊戲 - 乘除法練習</h1>
+    <button id="startButton">開始遊戲</button>
+  </div>
+
+  <script>
+    const totalQuestions = 10;
+    let currentQuestion = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft = 30;
+    let currentAnswer = 0;
+    let currentQuestionInfo = {}; // 記錄當前題目的資訊
+    let questionLog = []; // 儲存所有題目的記錄
+    
+    const gameDiv = document.getElementById('game');
+    const startButton = document.getElementById('startButton');
+    startButton.addEventListener('click', startGame);
+    
+    function startGame() {
+      currentQuestion = 0;
+      score = 0;
+      questionLog = [];
+      gameDiv.innerHTML = '<h1>國小數學遊戲 - 乘除法練習</h1>';
+      nextQuestion();
+    }
+    
+    function nextQuestion() {
+      // 遊戲結束則顯示結果與題目紀錄
+      if (currentQuestion >= totalQuestions) {
+        showResult();
+        return;
+      }
+      currentQuestion++;
+      clearInterval(timerInterval);
+      timeLeft = 30;
+      
+      // 隨機決定出題類型：乘法或除法
+      const type = Math.random() < 0.5 ? 'multiplication' : 'division';
+      let num1, num2;
+      if (type === 'multiplication') {
+        num1 = Math.floor(Math.random() * 10) + 1;
+        num2 = Math.floor(Math.random() * 10) + 1;
+        currentAnswer = num1 * num2;
+      } else {
+        // 為避免出現小數：先產生乘法，再反向出除法題目
+        num2 = Math.floor(Math.random() * 9) + 1;
+        const temp = Math.floor(Math.random() * 10) + 1;
+        num1 = num2 * temp;
+        currentAnswer = temp;
+      }
+      
+      // 組合題目字串
+      let questionText = type === 'multiplication' 
+                         ? `${num1} × ${num2} = ?`
+                         : `${num1} ÷ ${num2} = ?`;
+      
+      // 建立當前題目資訊並推入紀錄中
+      currentQuestionInfo = {
+        questionText: questionText,
+        correctAnswer: currentAnswer,
+        userAnswer: null,
+        isCorrect: false
+      };
+      questionLog.push(currentQuestionInfo);
+      
+      // 更新頁面內容，加入提交與放棄按鈕
+      gameDiv.innerHTML = `
+        <h1>國小數學遊戲 - 乘除法練習</h1>
+        <div id="question">第 ${currentQuestion} 題： ${questionText}</div>
+        <div id="timer">剩餘時間： <span id="timeLeft">${timeLeft}</span> 秒</div>
+        <div>
+          <input type="number" id="answerInput" placeholder="答案">
+          <button id="submitButton">提交</button>
+          <button id="abandonButton">放棄</button>
+        </div>
+      `;
+      
+      // 自動聚焦輸入框
+      document.getElementById('answerInput').focus();
+      
+      document.getElementById('submitButton').addEventListener('click', checkAnswer);
+      document.getElementById('abandonButton').addEventListener('click', abandonGame);
+      document.getElementById('answerInput').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+          checkAnswer();
+        }
+      });
+      
+      // 設定倒數計時
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timeLeft').textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          // 記錄使用者答案（若未填則記為 "未作答"）
+          const inputVal = document.getElementById('answerInput').value;
+          currentQuestionInfo.userAnswer = inputVal === "" ? "未作答" : inputVal;
+          currentQuestionInfo.isCorrect = parseFloat(inputVal) === currentAnswer;
+          alert('時間到！');
+          nextQuestion();
+        }
+      }, 1000);
+    }
+    
+    function checkAnswer() {
+      clearInterval(timerInterval);
+      const inputElem = document.getElementById('answerInput');
+      let userAnswer = inputElem.value;
+      if (userAnswer === "") {
+        userAnswer = "未作答";
+      }
+      currentQuestionInfo.userAnswer = userAnswer;
+      if (parseFloat(userAnswer) === currentAnswer) {
+        currentQuestionInfo.isCorrect = true;
+        score += 10;
+      } else {
+        currentQuestionInfo.isCorrect = false;
+      }
+      nextQuestion();
+    }
+    
+    // 放棄遊戲函式
+    function abandonGame() {
+      clearInterval(timerInterval);
+      // 若目前題目未作答，則記錄為「放棄」
+      if (currentQuestionInfo.userAnswer === null) {
+        currentQuestionInfo.userAnswer = "放棄";
+        currentQuestionInfo.isCorrect = false;
+      }
+      showResult();
+    }
+    
+    function showResult() {
+      let resultHTML = `
+        <h1>國小數學遊戲 - 乘除法練習</h1>
+        <div id="result">遊戲結束！你的得分：${score} 分</div>
+        <button id="restartButton">重新開始</button>
+      `;
+      
+      resultHTML += `<div class="question-log"><h2>題目紀錄：</h2><ul>`;
+      questionLog.forEach((q, index) => {
+        const liClass = q.isCorrect ? "" : "wrong";
+        resultHTML += `<li class="${liClass}">第 ${index+1} 題： ${q.questionText} 正確答案：${q.correctAnswer}，你的答案：${q.userAnswer}</li>`;
+      });
+      resultHTML += `</ul></div>`;
+      
+      gameDiv.innerHTML = resultHTML;
+      
+      if(score === 100) {
+        document.getElementById('result').classList.add('celebrate');
+      }
+      document.getElementById('restartButton').addEventListener('click', startGame);
+    }
+  </script>
+</body>
+</html>

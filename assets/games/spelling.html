@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>國小英語拼字遊戲</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #add8e6;
+            /* 淡藍色背景 */
+            margin: 50px;
+        }
+
+        #game {
+            display: none;
+        }
+
+        #result {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        /* 當分數滿分時，加入動畫：字形變大且變色 */
+        #result.win {
+            animation: winAnimation 2s infinite;
+        }
+
+        @keyframes winAnimation {
+            0% {
+                font-size: 24px;
+                color: black;
+            }
+
+            50% {
+                font-size: 36px;
+                color: red;
+            }
+
+            100% {
+                font-size: 24px;
+                color: black;
+            }
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        input[type="text"] {
+            padding: 5px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        span {
+            font-size: 18px;
+            margin: 0 2px;
+        }
+
+        .review-item {
+            margin: 10px 0;
+            padding: 5px;
+            border-bottom: 1px dashed #ccc;
+        }
+
+        .wrong {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>國小英語拼字遊戲</h1>
+    <!-- 遊戲開始區 -->
+    <div id="start">
+        <button id="startBtn">開始遊戲</button>
+    </div>
+
+    <!-- 遊戲進行區 -->
+    <div id="game">
+        <p id="questionNumber"></p>
+        <p id="chinesePrompt"></p>
+        <p id="englishPrompt"></p>
+        <p>剩餘時間: <span id="timer">30</span> 秒</p>
+        <button id="submitBtn">送出</button>
+    </div>
+
+    <!-- 遊戲結果及檢視 -->
+    <div id="result"></div>
+    <div id="review"></div>
+
+    <script>
+        // 單字資料庫，每筆包含英文單字與中文提示
+        const words = [
+            { word: "a", chinese: "一(個)" },
+            { word: "a few", chinese: "一些" },
+            { word: "a little", chinese: "一些" },
+            { word: "a lot", chinese: "許多" },
+            { word: "able", chinese: "能夠…的" },
+            { word: "about", chinese: "關於" },
+            { word: "above", chinese: "在…上方" },
+            { word: "abroad", chinese: "在國外" },
+            { word: "across", chinese: "在…對面" },
+            { word: "actress", chinese: "女演員" },
+            { word: "afraid", chinese: "害怕的" },
+            { word: "after", chinese: "在…之後" },
+            { word: "afternoon", chinese: "下午" },
+            { word: "again", chinese: "再一次" },
+            { word: "age", chinese: "年齡" },
+            { word: "ago", chinese: "以前" },
+            { word: "agree", chinese: "同意" },
+            { word: "ahead", chinese: "在前方" },
+            { word: "air", chinese: "空氣" },
+            { word: "airplane", chinese: "飛機" },
+            { word: "airport", chinese: "機場" },
+            { word: "all", chinese: "全部的" },
+            { word: "almost", chinese: "幾乎" },
+            { word: "along", chinese: "沿著" },
+            { word: "already", chinese: "已經" },
+            { word: "also", chinese: "也" },
+            { word: "always", chinese: "總是" },
+            { word: "a.m.", chinese: "上午" },
+            { word: "America", chinese: "美國" },
+            { word: "American", chinese: "美國人；美國的" },
+            { word: "and", chinese: "和" },
+            { word: "angry", chinese: "生氣的" },
+            { word: "animal", chinese: "動物" },
+            { word: "another", chinese: "另一個的" },
+            { word: "answer", chinese: "回答" },
+            { word: "ant", chinese: "螞蟻" },
+            { word: "any", chinese: "任何的" },
+            { word: "anyone", chinese: "任何人" },
+            { word: "anything", chinese: "任何事物" },
+            { word: "apartment", chinese: "公寓" },
+            { word: "appear", chinese: "出現" },
+            { word: "apple", chinese: "蘋果" },
+            { word: "April", chinese: "四月" },
+            { word: "arm", chinese: "手臂,武裝" },
+            { word: "around", chinese: "在…四周" },
+            { word: "arrive", chinese: "到達" },
+            { word: "art", chinese: "美術" },
+            { word: "as", chinese: "與…一樣" },
+            { word: "ask", chinese: "問" },
+            { word: "at", chinese: "在" },
+            { word: "August", chinese: "八月" },
+            { word: "aunt", chinese: "伯(叔)母" },
+            { word: "autumn", chinese: "秋天" },
+            { word: "away", chinese: "遠離" },
+            { word: "baby", chinese: "嬰兒" },
+            { word: "back", chinese: "在…後面" },
+            { word: "bad", chinese: "壞的" },
+            { word: "badminton", chinese: "羽毛球" },
+            { word: "bag", chinese: "袋子" },
+            { word: "bake", chinese: "烘烤" },
+            { word: "bakery", chinese: "麵包店" },
+            { word: "balcony", chinese: "陽台" },
+            { word: "ball", chinese: "球" },
+            { word: "banana", chinese: "香蕉" },
+            { word: "band", chinese: "樂團" },
+            { word: "bank", chinese: "銀行" },
+            { word: "barbecue", chinese: "烤肉" },
+            { word: "baseball", chinese: "棒球" },
+            { word: "basket", chinese: "籃子" },
+            { word: "basketball", chinese: "籃球" },
+            { word: "bat", chinese: "蝙蝠" },
+            { word: "bath", chinese: "洗澡" },
+            { word: "bathroom", chinese: "浴室" },
+            { word: "be", chinese: "是" },
+            { word: "beach", chinese: "海灘" },
+            { word: "bean", chinese: "豆" },
+            { word: "bear", chinese: "熊" },
+            { word: "beautiful", chinese: "美麗的" },
+            { word: "because", chinese: "因為" },
+            { word: "become", chinese: "變成" },
+            { word: "bed", chinese: "床" },
+            { word: "bedroom", chinese: "臥室" },
+            { word: "bee", chinese: "蜜蜂" },
+            { word: "beef", chinese: "牛肉" },
+            { word: "before", chinese: "在…之前" },
+            { word: "begin", chinese: "開始" },
+            { word: "behind", chinese: "在…後面" },
+            { word: "believe", chinese: "相信" },
+            { word: "bell", chinese: "鈴" },
+            { word: "belong", chinese: "屬於" },
+            { word: "below", chinese: "在…下方" },
+            { word: "belt", chinese: "皮帶" },
+            { word: "bench", chinese: "長椅" },
+            { word: "beside", chinese: "在…旁邊" },
+            { word: "between", chinese: "在…之間" },
+            { word: "bike", chinese: "腳踏車" },
+            { word: "big", chinese: "大的" },
+            { word: "bird", chinese: "鳥" },
+            { word: "birthday", chinese: "生日" },
+            { word: "bite", chinese: "咬" },
+            { word: "black", chinese: "黑色(的)" },
+            { word: "blackboard", chinese: "黑板" },
+            { word: "blanket", chinese: "毯子" },
+            { word: "blind", chinese: "瞎的" },
+            { word: "block", chinese: "街區" },
+            { word: "blow", chinese: "吹" },
+            { word: "blue", chinese: "藍色(的)" },
+            { word: "boat", chinese: "船" },
+            { word: "body", chinese: "身體" },
+            { word: "boil", chinese: "煮沸" },
+            { word: "book", chinese: "書" },
+            { word: "bookstore", chinese: "書店" },
+            { word: "bored", chinese: "感到厭煩的 / bored" },
+            { word: "boring", chinese: "無聊的" },
+            { word: "born", chinese: "出生" },
+            { word: "borrow", chinese: "借入" },
+            { word: "boss", chinese: "老板" },
+            { word: "both", chinese: "兩者都" },
+            { word: "bottle", chinese: "瓶子" },
+            { word: "bottom", chinese: "底部" },
+            { word: "bow", chinese: "敬禮" },
+            { word: "bowl", chinese: "碗" },
+            { word: "box", chinese: "盒子" },
+            { word: "boy", chinese: "男孩" },
+            { word: "bread", chinese: "麵包" },
+            { word: "break", chinese: "打破" },
+            { word: "breakfast", chinese: "早餐" },
+            { word: "bridge", chinese: "橋" },
+            { word: "bright", chinese: "明亮的" },
+            { word: "bring", chinese: "帶來" },
+            { word: "brother", chinese: "兄弟" },
+            { word: "brown", chinese: "棕色(的)" },
+            { word: "brush", chinese: "刷" },
+            { word: "bug", chinese: "小蟲" },
+            { word: "build", chinese: "建造" },
+            { word: "bun", chinese: "小圓麵包" },
+            { word: "burn", chinese: "燃燒" },
+            { word: "bus", chinese: "公車" },
+            { word: "business", chinese: "生意" },
+            { word: "businessman", chinese: "商人" },
+            { word: "busy", chinese: "忙碌的" },
+            { word: "but", chinese: "但是" },
+            { word: "butter", chinese: "奶油" },
+            { word: "butterfly", chinese: "蝴蝶" },
+            { word: "buy", chinese: "買" },
+            { word: "by", chinese: "藉著" },
+            { word: "cage", chinese: "籠子" },
+            { word: "cake", chinese: "蛋糕" },
+            { word: "call", chinese: "打電話" },
+            { word: "camera", chinese: "照相機" },
+            { word: "camp", chinese: "露營" },
+            { word: "can", chinese: "能夠" },
+            { word: "candle", chinese: "蠟燭" },
+            { word: "candy", chinese: "糖果" },
+            { word: "cap", chinese: "(無邊)帽 / cap" },
+            { word: "car", chinese: "車子" },
+            { word: "card", chinese: "卡片" },
+            { word: "care", chinese: "關心" },
+            { word: "careful", chinese: "仔細的" },
+            { word: "carry", chinese: "攜帶" },
+            { word: "case", chinese: "情形" },
+            { word: "castle", chinese: "城堡" },
+            { word: "cat", chinese: "貓" },
+            { word: "catch", chinese: "趕上" },
+            { word: "celebrate", chinese: "慶祝" },
+            { word: "cell phone", chinese: "手機" },
+            { word: "cent", chinese: "〈一〉分錢 / cent" },
+            { word: "center", chinese: "中心" },
+            { word: "centimeter", chinese: "公分" },
+            { word: "chair", chinese: "椅子" },
+            { word: "chalk", chinese: "粉筆" },
+            { word: "chance", chinese: "機會" },
+            { word: "change", chinese: "交換,零錢" },
+            { word: "cheap", chinese: "便宜的" },
+            { word: "cheat", chinese: "欺騙" },
+            { word: "check", chinese: "檢查" },
+            { word: "cheer", chinese: "歡呼" },
+            { word: "cheese", chinese: "乳酪" },
+            { word: "chess", chinese: "西洋棋" },
+            { word: "chicken", chinese: "雞肉" },
+            { word: "child", chinese: "小孩" },
+            { word: "China", chinese: "中國" },
+            { word: "Chinese", chinese: "中國人,中文" },
+            { word: "chocolate", chinese: "巧克力" },
+            { word: "choose", chinese: "選擇" },
+            { word: "chopsticks", chinese: "筷子" },
+            { word: "Christmas", chinese: "聖誕節" },
+            { word: "church", chinese: "教堂" },
+            { word: "circle", chinese: "圓圈" },
+            { word: "city", chinese: "城市" },
+            { word: "clap", chinese: "拍手" },
+            { word: "class", chinese: "班級" },
+            { word: "classmate", chinese: "同班同學" },
+            { word: "classroom", chinese: "教室" },
+            { word: "clean", chinese: "打掃" },
+            { word: "clear", chinese: "清楚的" },
+            { word: "clerk", chinese: "店員" },
+            { word: "climb", chinese: "爬" },
+            { word: "clock", chinese: "時鐘" },
+            { word: "close", chinese: "關上" },
+            { word: "clothes", chinese: "衣服" },
+            { word: "cloudy", chinese: "多雲的" },
+            { word: "club", chinese: "社團" },
+            { word: "coat", chinese: "大衣" },
+            { word: "coffee", chinese: "咖啡" },
+            { word: "Coke", chinese: "可樂" },
+            { word: "cold", chinese: "寒冷的" },
+            { word: "collect", chinese: "收集" },
+            { word: "color", chinese: "顏色" },
+            { word: "come", chinese: "來" },
+            { word: "comb", chinese: "梳子" },
+            { word: "comfortable", chinese: "舒適的" },
+            { word: "comic", chinese: "連環漫畫" },
+            { word: "common", chinese: "共同的" },
+            { word: "computer", chinese: "電腦" },
+            { word: "convenient", chinese: "方便的" },
+            { word: "cook", chinese: "煮飯" },
+            { word: "cookie", chinese: "餅乾" },
+            { word: "cool", chinese: "涼爽的" },
+            { word: "copy", chinese: "抄寫,複製" },
+            { word: "corner", chinese: "角落" },
+            { word: "correct", chinese: "正確的" },
+            { word: "cost", chinese: "價值" },
+            { word: "couch", chinese: "沙發" },
+            { word: "count", chinese: "計算" },
+            { word: "country", chinese: "鄉村" },
+            { word: "course", chinese: "課程" },
+            { word: "cousin", chinese: "堂,表兄弟姊妹" },
+            { word: "cover", chinese: "覆蓋,封面,掩護" },
+            { word: "cow", chinese: "母牛" },
+            { word: "cowboy", chinese: "牛仔" },
+            { word: "crazy", chinese: "瘋狂的" },
+            { word: "cross", chinese: "越過" },
+            { word: "cry", chinese: "哭" },
+            { word: "cup", chinese: "茶杯" },
+            { word: "cut", chinese: "切" },
+            { word: "cute", chinese: "可愛的" },
+            { word: "dance", chinese: "跳舞" },
+            { word: "dangerous", chinese: "危險的" },
+            { word: "dark", chinese: "黑暗的" },
+            { word: "date", chinese: "日期" },
+            { word: "daughter", chinese: "女兒" },
+            { word: "day", chinese: "日子" },
+            { word: "dead", chinese: "死的" },
+            { word: "dear", chinese: "親愛的" },
+            { word: "December", chinese: "十二月" },
+            { word: "decide", chinese: "決定" },
+            { word: "delicious", chinese: "美味的" },
+            { word: "dentist", chinese: "牙醫" },
+            { word: "department store", chinese: "百貨公司" },
+            { word: "desk", chinese: "書桌" },
+            { word: "dictionary", chinese: "字典" },
+            { word: "die", chinese: "死掉" },
+            { word: "different", chinese: "不同的" },
+            { word: "difficult", chinese: "困難的" },
+            { word: "dig", chinese: "挖掘" },
+            { word: "dining room", chinese: "飯廳" },
+            { word: "dinner", chinese: "晚餐" },
+            { word: "dirty", chinese: "骯髒的" },
+            { word: "dish", chinese: "盤子,菜餚" },
+            { word: "do", chinese: "做" },
+            { word: "doctor", chinese: "醫生" },
+            { word: "dodge ball", chinese: "躲避球" },
+            { word: "dog", chinese: "狗" },
+            { word: "doll", chinese: "洋娃娃" },
+            { word: "dollar", chinese: "元" },
+            { word: "door", chinese: "門" },
+            { word: "dot", chinese: "點" },
+            { word: "down", chinese: "向下" },
+            { word: "dozen", chinese: "〈一〉打" },
+            { word: "dragon", chinese: "龍" },
+            { word: "draw", chinese: "畫" },
+            { word: "drawer", chinese: "抽屜" },
+            { word: "dream", chinese: "〈做〉夢" },
+            { word: "dress", chinese: "洋裝" },
+            { word: "drink", chinese: "喝" },
+            { word: "drive", chinese: "駕駛" },
+            { word: "driver", chinese: "駕駛人" },
+            { word: "drop", chinese: "掉落" },
+            { word: "drum", chinese: "鼓" },
+            { word: "dry", chinese: "乾的" },
+            { word: "duck", chinese: "鴨" },
+            { word: "dumpling", chinese: "包餡食物,餃子" },
+            { word: "during", chinese: "在…期間" },
+            { word: "each", chinese: "每一〈的〉" },
+            { word: "ear", chinese: "耳朵" },
+            { word: "early", chinese: "早的" },
+            { word: "earth", chinese: "地球" },
+            { word: "east", chinese: "東方" },
+            { word: "Easter", chinese: "復活節" },
+            { word: "easy", chinese: "容易的" },
+            { word: "eat", chinese: "吃" },
+            { word: "egg", chinese: "蛋" },
+            { word: "eight", chinese: "八" },
+            { word: "eighteen", chinese: "十八" },
+            { word: "eighth", chinese: "第八" },
+            { word: "eighty", chinese: "八十" },
+            { word: "either", chinese: "也不" },
+            { word: "elementary school", chinese: "小學" },
+            { word: "elephant", chinese: "大象" },
+            { word: "eleven", chinese: "十一" },
+            { word: "eleventh", chinese: "第十一(的)" },
+            { word: "else", chinese: "其他的" },
+            { word: "e-mail", chinese: "電子郵件" },
+            { word: "end", chinese: "結束" },
+            { word: "engineer", chinese: "工程師" },
+            { word: "English", chinese: "英語" },
+            { word: "enjoy", chinese: "喜愛" },
+            { word: "enough", chinese: "足夠的" },
+            { word: "enter", chinese: "進入" },
+            { word: "envelope", chinese: "信" },
+            { word: "eraser", chinese: "橡皮擦" },
+            { word: "eve", chinese: "前夕" },
+            { word: "even", chinese: "甚至" },
+            { word: "evening", chinese: "傍晚" },
+            { word: "ever", chinese: "曾經" },
+            { word: "every", chinese: "每一個(的)" },
+            { word: "everyone", chinese: "每一個人" },
+            { word: "everybody", chinese: "每一個人" },
+            { word: "everything", chinese: "每件事" },
+            { word: "example", chinese: "例子" },
+            { word: "excellent", chinese: "極好的" },
+            { word: "except", chinese: "除了…之外" },
+            { word: "excited", chinese: "感到興奮的" },
+            { word: "exciting", chinese: "令人興奮的" },
+            { word: "excuse", chinese: "原諒" },
+            { word: "exercise", chinese: "運動" },
+            { word: "expensive", chinese: "昂貴的" },
+            { word: "experience", chinese: "經驗" },
+            { word: "eye", chinese: "眼睛" },
+            { word: "face", chinese: "臉孔,面對" },
+            { word: "fact", chinese: "事實" },
+            { word: "factory", chinese: "工廠" },
+            { word: "fail", chinese: "失敗" },
+            { word: "fall", chinese: "秋天" },
+            { word: "family", chinese: "家庭" },
+            { word: "famous", chinese: "有名的" },
+            { word: "fan", chinese: "扇子,擁護者" },
+            { word: "far", chinese: "遠的" },
+            { word: "farm", chinese: "農田" },
+            { word: "farmer", chinese: "農夫" },
+            { word: "fast", chinese: "快的" },
+            { word: "fat", chinese: "胖的" },
+            { word: "father", chinese: "父親" },
+            { word: "favorite", chinese: "最喜愛的" },
+            { word: "February", chinese: "二月" },
+            { word: "feed", chinese: "餵" },
+            { word: "feel", chinese: "覺得" },
+            { word: "festival", chinese: "節慶" },
+            { word: "fever", chinese: "發燒" },
+            { word: "few", chinese: "少數的" },
+            { word: "fifteen", chinese: "十五" },
+            { word: "fifteenth", chinese: "第十五(的)" },
+            { word: "fifth", chinese: "第五(的)" },
+            { word: "fifty", chinese: "五十" },
+            { word: "fight", chinese: "打架" },
+            { word: "fill", chinese: "裝滿" },
+            { word: "finally", chinese: "最後" },
+            { word: "find", chinese: "找到" },
+            { word: "fine", chinese: "很好的" },
+            { word: "finger", chinese: "手指" },
+            { word: "finish", chinese: "完成" },
+            { word: "fire", chinese: "火焰,開火" },
+            { word: "first", chinese: "第一(的)" },
+            { word: "fish", chinese: "魚" },
+            { word: "fisherman", chinese: "漁夫" },
+            { word: "five", chinese: "五" },
+            { word: "fix", chinese: "修理" },
+            { word: "floor", chinese: "地板" },
+            { word: "flower", chinese: "花朵" },
+            { word: "flute", chinese: "笛" },
+            { word: "fly", chinese: "飛" },
+            { word: "follow", chinese: "遵循,跟隨" },
+            { word: "food", chinese: "食物" },
+            { word: "foot", chinese: "腳" },
+            { word: "for", chinese: "為了" },
+            { word: "foreign", chinese: "外國的" },
+            { word: "foreigner", chinese: "外國人" },
+            { word: "forget", chinese: "忘記" },
+            { word: "fork", chinese: "叉子" },
+            { word: "forty", chinese: "四十" },
+            { word: "four", chinese: "四" },
+            { word: "fourteen", chinese: "十四" },
+            { word: "fourteenth", chinese: "第十四(的)" },
+            { word: "fourth", chinese: "第四(的)" },
+            { word: "fox", chinese: "狐狸" },
+            { word: "free", chinese: "空閒的,免費" },
+            { word: "French fries", chinese: "炸薯條" },
+            { word: "fresh", chinese: "新鮮的" },
+            { word: "Friday", chinese: "星期五" },
+            { word: "friend", chinese: "朋友" },
+            { word: "friendly", chinese: "友善的" },
+            { word: "frisbee", chinese: "飛盤" },
+            { word: "frog", chinese: "青蛙" },
+            { word: "from", chinese: "從" },
+            { word: "front", chinese: "前面" },
+            { word: "fruit", chinese: "水果" },
+            { word: "fry", chinese: "油炸" },
+            { word: "full", chinese: "滿的" },
+            { word: "fun", chinese: "樂趣" },
+            { word: "funny", chinese: "好笑的" },
+            { word: "future", chinese: "未來" },
+            { word: "game", chinese: "比賽,遊戲" },
+            { word: "garbage", chinese: "垃圾" },
+            { word: "garden", chinese: "花園" },
+            { word: "gas", chinese: "瓦斯" },
+            { word: "gate", chinese: "大門" },
+            { word: "get", chinese: "得到" },
+            { word: "ghost", chinese: "鬼" },
+            { word: "giant", chinese: "巨大的,巨人" },
+            { word: "gift", chinese: "禮物" },
+            { word: "girl", chinese: "女孩" },
+            { word: "give", chinese: "給予" },
+            { word: "glad", chinese: "高興的" },
+            { word: "glass", chinese: "玻璃,玻璃杯" },
+            { word: "glasses", chinese: "眼鏡" },
+            { word: "glove", chinese: "手套" },
+            { word: "glue", chinese: "膠水" },
+            { word: "go", chinese: "去" },
+            { word: "goat", chinese: "山羊" },
+            { word: "good", chinese: "好的" },
+            { word: "goodbye", chinese: "再見" },
+            { word: "goose", chinese: "鵝" },
+            { word: "grade", chinese: "成績,年級" },
+            { word: "gram", chinese: "公克" },
+            { word: "grandfather", chinese: "祖父" },
+            { word: "grandmother", chinese: "祖母" },
+            { word: "grape", chinese: "葡萄" },
+            { word: "grass", chinese: "草" },
+            { word: "gray", chinese: "灰色的" },
+            { word: "great", chinese: "很棒的" },
+            { word: "green", chinese: "綠色(的)" },
+            { word: "ground", chinese: "地面" },
+            { word: "group", chinese: "團體" },
+            { word: "grow", chinese: "種植" },
+            { word: "guava", chinese: "番石榴" },
+            { word: "guess", chinese: "猜想" },
+            { word: "guitar", chinese: "吉他" },
+            { word: "guy", chinese: "傢伙" },
+            { word: "gym", chinese: "體育館" },
+            { word: "habit", chinese: "習慣" },
+            { word: "hair", chinese: "頭髮" },
+            { word: "half", chinese: "一半" },
+            { word: "Halloween", chinese: "萬聖節" },
+            { word: "ham", chinese: "火腿" },
+            { word: "hamburger", chinese: "漢堡" },
+            { word: "hand", chinese: "手" },
+            { word: "handsome", chinese: "英俊的" },
+            { word: "hang", chinese: "懸掛" },
+            { word: "happen", chinese: "發生" },
+            { word: "happy", chinese: "快樂的" },
+            { word: "hard", chinese: "困難的,硬的" },
+            { word: "hard-working", chinese: "努力工作的" },
+            { word: "hat", chinese: "帽子" },
+            { word: "hate", chinese: "討厭" },
+            { word: "have", chinese: "有" },
+            { word: "he", chinese: "他" },
+            { word: "head", chinese: "頭" },
+            { word: "headache", chinese: "頭痛" },
+            { word: "health", chinese: "健康" },
+            { word: "healthy", chinese: "健康的" },
+            { word: "hear", chinese: "聽" },
+            { word: "heart", chinese: "心" },
+            { word: "heat", chinese: "熱度,加熱" },
+            { word: "heavy", chinese: "重的" },
+            { word: "hello", chinese: "喂" },
+            { word: "help", chinese: "幫忙" },
+            { word: "helpful", chinese: "有幫助的" },
+            { word: "hen", chinese: "母雞" },
+            { word: "here", chinese: "這裡" },
+            { word: "hey", chinese: "嘿" },
+            { word: "hi", chinese: "嗨" },
+            { word: "hide", chinese: "隱藏" },
+            { word: "high", chinese: "高的" },
+            { word: "hike", chinese: "徒步旅行" },
+            { word: "hill", chinese: "小山" },
+            { word: "hippo", chinese: "河馬" },
+            { word: "history", chinese: "歷史" },
+            { word: "hit", chinese: "打擊" },
+            { word: "hobby", chinese: "嗜好" },
+            { word: "hold", chinese: "拿著" },
+            { word: "holiday", chinese: "假日" },
+            { word: "home", chinese: "家" },
+            { word: "homework", chinese: "家庭作業" },
+            { word: "honest", chinese: "誠實的" },
+            { word: "honey", chinese: "蜂蜜" },
+            { word: "hop", chinese: "(單腳)跳" },
+            { word: "hope", chinese: "希望" },
+            { word: "horse", chinese: "馬" },
+            { word: "hospital", chinese: "醫院" },
+            { word: "hot", chinese: "熱的" },
+            { word: "hot dog", chinese: "熱狗" },
+            { word: "hotel", chinese: "旅社" },
+            { word: "hour", chinese: "小時" },
+            { word: "house", chinese: "房屋" },
+            { word: "housewife", chinese: "家庭主婦" },
+            { word: "how", chinese: "如何" },
+            { word: "however", chinese: "然而" },
+            { word: "hundred", chinese: "百" },
+            { word: "hungry", chinese: "飢餓的" },
+            { word: "hunt", chinese: "打獵" },
+            { word: "hurry", chinese: "趕忙" },
+            { word: "hurt", chinese: "受傷,疼痛" },
+            { word: "husband", chinese: "丈夫" },
+            { word: "I", chinese: "我" },
+            { word: "ice", chinese: "冰" },
+            { word: "ice cream", chinese: "冰淇淋" },
+            { word: "idea", chinese: "主意" },
+            { word: "if", chinese: "如果" },
+            { word: "important", chinese: "重要的" },
+            { word: "in", chinese: "在…裡面" },
+            { word: "insect", chinese: "昆蟲" },
+            { word: "inside", chinese: "在…內部" },
+            { word: "interest", chinese: "使…感興趣" },
+            { word: "interested", chinese: "感興趣的" },
+            { word: "interesting", chinese: "有趣的" },
+            { word: "interview", chinese: "訪問,面試" },
+            { word: "Internet", chinese: "網路" },
+            { word: "into", chinese: "到…之內" },
+            { word: "invite", chinese: "邀請" },
+            { word: "island", chinese: "島嶼" },
+            { word: "it", chinese: "它" },
+            { word: "jacket", chinese: "夾克" },
+            { word: "January", chinese: "一月" },
+            { word: "jeans", chinese: "牛仔褲" },
+            { word: "job", chinese: "工作" },
+            { word: "jog", chinese: "慢跑" },
+            { word: "join", chinese: "加入" },
+            { word: "joy", chinese: "歡樂" },
+            { word: "juice", chinese: "果汁" },
+            { word: "July", chinese: "七月" },
+            { word: "jump", chinese: "跳躍" },
+            { word: "June", chinese: "六月" },
+            { word: "junior high school", chinese: "國中" },
+            { word: "just", chinese: "只是,剛才" },
+            { word: "kangaroo", chinese: "袋鼠" },
+            { word: "keep", chinese: "保持" },
+            { word: "key", chinese: "鑰匙" },
+            { word: "kick", chinese: "踢" },
+            { word: "kid", chinese: "小孩" },
+            { word: "kill", chinese: "殺" },
+            { word: "kilo(gram)", chinese: "公斤" },
+            { word: "kind", chinese: "種類" },
+            { word: "king", chinese: "國王" },
+            { word: "kiss", chinese: "吻" },
+            { word: "kitchen", chinese: "廚房" },
+            { word: "kite", chinese: "風箏" },
+            { word: "knee", chinese: "膝蓋" },
+            { word: "knife", chinese: "刀子" },
+            { word: "knock", chinese: "敲" },
+            { word: "know", chinese: "知道" },
+            { word: "knowledge", chinese: "知識" },
+            { word: "koala", chinese: "無尾熊" },
+            { word: "lake", chinese: "湖" },
+            { word: "lamp", chinese: "燈" },
+            { word: "land", chinese: "土地" },
+            { word: "language", chinese: "語言" },
+            { word: "lantern", chinese: "燈籠" },
+            { word: "large", chinese: "大的" },
+            { word: "last", chinese: "最後的" },
+            { word: "late", chinese: "晚的" },
+            { word: "later", chinese: "稍後" },
+            { word: "laugh", chinese: "笑" },
+            { word: "lawyer", chinese: "律師" },
+            { word: "lazy", chinese: "懶惰的" },
+            { word: "lead", chinese: "引導" },
+            { word: "leader", chinese: "領導者" },
+            { word: "learn", chinese: "學習" },
+            { word: "least", chinese: "最少〈的〉" },
+            { word: "leave", chinese: "離開" },
+            { word: "left", chinese: "左邊" },
+            { word: "leg", chinese: "腿" },
+            { word: "lemon", chinese: "檸檬" },
+            { word: "lend", chinese: "借出" },
+            { word: "less", chinese: "較少的" },
+            { word: "lesson", chinese: "課" },
+            { word: "let", chinese: "讓" },
+            { word: "letter", chinese: "信" },
+            { word: "lettuce", chinese: "萵苣" },
+            { word: "library", chinese: "圖書館" },
+            { word: "lid", chinese: "蓋子" },
+            { word: "lie", chinese: "說謊" },
+            { word: "life", chinese: "生活" },
+            { word: "light", chinese: "燈光,輕的" },
+            { word: "like", chinese: "喜歡" },
+            { word: "line", chinese: "隊伍,線條" },
+            { word: "lion", chinese: "獅子" },
+            { word: "lip", chinese: "嘴唇" },
+            { word: "list", chinese: "表,名單" },
+            { word: "listen", chinese: "聽" },
+            { word: "little", chinese: "小的" },
+            { word: "live", chinese: "住,活的,實況" },
+            { word: "living room", chinese: "客廳" },
+            { word: "lonely", chinese: "寂寞的" },
+            { word: "long", chinese: "長的" },
+            { word: "look", chinese: "看" },
+            { word: "lose", chinese: "遺失" },
+            { word: "loud", chinese: "大聲的" },
+            { word: "love", chinese: "喜愛" },
+            { word: "lovely", chinese: "可愛的" },
+            { word: "low", chinese: "低的" },
+            { word: "lucky", chinese: "幸運的" },
+            { word: "lunch", chinese: "午餐" },
+            { word: "machine", chinese: "機器" },
+            { word: "mad", chinese: "瘋狂的" },
+            { word: "magic", chinese: "神奇的,魔術" },
+            { word: "mail", chinese: "信件" },
+            { word: "mailman", chinese: "郵差" },
+            { word: "make", chinese: "製作" },
+            { word: "man", chinese: "男人" },
+            { word: "many", chinese: "許多的" },
+            { word: "map", chinese: "地圖" },
+            { word: "March", chinese: "三月" },
+            { word: "mark", chinese: "做記號" },
+            { word: "marker", chinese: "簽字筆" },
+            { word: "market", chinese: "市場" },
+            { word: "married", chinese: "已婚的" },
+            { word: "mask", chinese: "面具" },
+            { word: "mat", chinese: "墊子" },
+            { word: "math", chinese: "數學" },
+            { word: "matter", chinese: "事情" },
+            { word: "may", chinese: "可能" },
+            { word: "May", chinese: "五月" },
+            { word: "maybe", chinese: "也許" },
+            { word: "meal", chinese: "一餐" },
+            { word: "mean", chinese: "意指" },
+            { word: "meat", chinese: "肉" },
+            { word: "medicine", chinese: "藥" },
+            { word: "medium", chinese: "中號〈的〉" },
+            { word: "meet", chinese: "遇見" },
+            { word: "meeting", chinese: "會議" },
+            { word: "menu", chinese: "菜單,選單" },
+            { word: "mile", chinese: "英里,哩" },
+            { word: "milk", chinese: "牛奶" },
+            { word: "million", chinese: "百萬" },
+            { word: "mind", chinese: "介意" },
+            { word: "minute", chinese: "分鐘" },
+            { word: "Miss", chinese: "小姐" },
+            { word: "miss", chinese: "想念" },
+            { word: "mistake", chinese: "錯誤" },
+            { word: "modern", chinese: "現代化的" },
+            { word: "moment", chinese: "片刻" },
+            { word: "Monday", chinese: "星期一" },
+            { word: "money", chinese: "錢" },
+            { word: "monkey", chinese: "猴子" },
+            { word: "month", chinese: "月份" },
+            { word: "moon", chinese: "月亮" },
+            { word: "mop", chinese: "拖地" },
+            { word: "more", chinese: "更多的" },
+            { word: "morning", chinese: "早上" },
+            { word: "most", chinese: "大部分的" },
+            { word: "mother", chinese: "母親" },
+            { word: "motorcycle", chinese: "機車" },
+            { word: "mountain", chinese: "山" },
+            { word: "mouse", chinese: "老鼠" },
+            { word: "mouth", chinese: "嘴巴" },
+            { word: "move", chinese: "移動" },
+            { word: "movie", chinese: "電影" },
+            { word: "Mr.", chinese: "先生" },
+            { word: "Mrs.", chinese: "太太" },
+            { word: "MRT", chinese: "捷運" },
+            { word: "Ms.", chinese: "女士" },
+            { word: "much", chinese: "許多(不可數)" },
+            { word: "mud", chinese: "泥巴" },
+            { word: "museum", chinese: "博物館" },
+            { word: "music", chinese: "音樂" },
+            { word: "must", chinese: "必須" },
+            { word: "nail", chinese: "釘子" },
+            { word: "name", chinese: "名字" },
+            { word: "national", chinese: "國家的" },
+            { word: "near", chinese: "在…附近" },
+            { word: "neck", chinese: "脖子" },
+            { word: "need", chinese: "需要" },
+            { word: "neighbor", chinese: "鄰居" },
+            { word: "never", chinese: "從不" },
+            { word: "new", chinese: "新的" },
+            { word: "news", chinese: "消息,新聞" },
+            { word: "next", chinese: "下一個" },
+            { word: "nice", chinese: "好的" },
+            { word: "night", chinese: "晚上" },
+            { word: "nine", chinese: "九" },
+            { word: "nineteen", chinese: "十九" },
+            { word: "nineteenth", chinese: "第十九" },
+            { word: "ninety", chinese: "九十" },
+            { word: "ninth", chinese: "第九" },
+            { word: "note", chinese: "筆記" },
+            { word: "notebook", chinese: "筆記本,筆電" },
+            { word: "nothing", chinese: "沒東西,沒事" },
+            { word: "notice", chinese: "注意到" },
+            { word: "November", chinese: "十一月" },
+            { word: "now", chinese: "現在" },
+            { word: "number", chinese: "號碼" },
+            { word: "nurse", chinese: "護士" },
+            { word: "o’clock", chinese: "點鐘" },
+            { word: "October", chinese: "十月" },
+            { word: "of", chinese: "...的" },
+            { word: "off", chinese: "自…離開" },
+            { word: "office", chinese: "辦公室" },
+            { word: "officer", chinese: "官員" },
+            { word: "often", chinese: "時常" },
+            { word: "oil", chinese: "油" },
+            { word: "OK", chinese: "可以" },
+            { word: "old", chinese: "老的" },
+            { word: "on", chinese: "在…上面" },
+            { word: "once", chinese: "一次" },
+            { word: "one", chinese: "一" },
+            { word: "only", chinese: "只有" },
+            { word: "open", chinese: "打開,開放" },
+            { word: "or", chinese: "或" },
+            { word: "orange", chinese: "柳橙" },
+            { word: "order", chinese: "點餐,秩序" },
+            { word: "other", chinese: "其他的" },
+            { word: "out", chinese: "在外" },
+            { word: "outside", chinese: "在…外部" },
+            { word: "over", chinese: "結束" },
+            { word: "own", chinese: "自己的" },
+            { word: "ox", chinese: "公牛" },
+            { word: "pack", chinese: "包" },
+            { word: "package", chinese: "包裹" },
+            { word: "page", chinese: "頁" },
+            { word: "paint", chinese: "繪畫" },
+            { word: "pair", chinese: "一雙" },
+            { word: "pants", chinese: "長褲" },
+            { word: "papaya", chinese: "木瓜" },
+            { word: "paper", chinese: "紙" },
+            { word: "parent(s)", chinese: "父(母)親" },
+            { word: "park", chinese: "公園" },
+            { word: "part", chinese: "部分" },
+            { word: "party", chinese: "派對" },
+            { word: "pass", chinese: "通過" },
+            { word: "past", chinese: "經過" },
+            { word: "paste", chinese: "黏貼,漿糊" },
+            { word: "pay", chinese: "付錢" },
+            { word: "PE", chinese: "體育" },
+            { word: "peach", chinese: "桃子" },
+            { word: "pear", chinese: "梨子" },
+            { word: "pen", chinese: "筆" },
+            { word: "pencil", chinese: "鉛筆" },
+            { word: "people", chinese: "人們,人民" },
+            { word: "perhaps", chinese: "或許" },
+            { word: "person", chinese: "人" },
+            { word: "pet", chinese: "寵物" },
+            { word: "photo", chinese: "相片" },
+            { word: "piano", chinese: "鋼琴" },
+            { word: "pick", chinese: "撿拾" },
+            { word: "picnic", chinese: "野餐" },
+            { word: "picture", chinese: "圖片,照片" },
+            { word: "pie", chinese: "派" },
+            { word: "piece", chinese: "片" },
+            { word: "pig", chinese: "豬" },
+            { word: "pin", chinese: "大頭針" },
+            { word: "pink", chinese: "粉紅色(的)" },
+            { word: "pipe", chinese: "管" },
+            { word: "pizza", chinese: "披薩" },
+            { word: "place", chinese: "地方" },
+            { word: "plan", chinese: "計畫" },
+            { word: "planet", chinese: "行星" },
+            { word: "plant", chinese: "植物" },
+            { word: "plate", chinese: "盤子" },
+            { word: "play", chinese: "玩" },
+            { word: "player", chinese: "球員,玩家" },
+            { word: "playground", chinese: "操場" },
+            { word: "pleasure", chinese: "樂趣,使高興" },
+            { word: "please", chinese: "請" },
+            { word: "p.m.", chinese: "下午" },
+            { word: "pocket", chinese: "口袋" },
+            { word: "point", chinese: "指著,得分" },
+            { word: "police", chinese: "警察" },
+            { word: "polite", chinese: "有禮貌的" },
+            { word: "pond", chinese: "池塘" },
+            { word: "pool", chinese: "游泳池" },
+            { word: "poor", chinese: "貧困的,可憐的" },
+            { word: "popcorn", chinese: "爆米花" },
+            { word: "popular", chinese: "受歡迎的" },
+            { word: "pork", chinese: "豬肉" },
+            { word: "possible", chinese: "可能的" },
+            { word: "post office", chinese: "郵局" },
+            { word: "postcard", chinese: "明信片" },
+            { word: "pot", chinese: "罐,壺,鍋子" },
+            { word: "pound", chinese: "磅" },
+            { word: "practice", chinese: "練習" },
+            { word: "pray", chinese: "祈禱" },
+            { word: "prepare", chinese: "準備" },
+            { word: "present", chinese: "禮物" },
+            { word: "pretty", chinese: "漂亮的,非常" },
+            { word: "price", chinese: "價格" },
+            { word: "princess", chinese: "公主" },
+            { word: "prize", chinese: "獎品,獎金" },
+            { word: "problem", chinese: "問題" },
+            { word: "program", chinese: "節目" },
+            { word: "proud", chinese: "驕傲的" },
+            { word: "public", chinese: "公立的,公眾的" },
+            { word: "pull", chinese: "拉" },
+            { word: "pumpkin", chinese: "南瓜" },
+            { word: "purple", chinese: "紫色的" },
+            { word: "push", chinese: "推" },
+            { word: "put", chinese: "放" },
+            { word: "quarter", chinese: "15分鐘,1/4" },
+            { word: "queen", chinese: "皇后" },
+            { word: "question", chinese: "問題" },
+            { word: "quick", chinese: "迅速的" },
+            { word: "quiet", chinese: "安靜的" },
+            { word: "quite", chinese: "相當" },
+            { word: "quiz", chinese: "小考" },
+            { word: "rabbit", chinese: "兔子" },
+            { word: "race", chinese: "賽跑" },
+            { word: "radio", chinese: "收音機" },
+            { word: "railroad", chinese: "鐵路" },
+            { word: "rain", chinese: "下雨" },
+            { word: "rainbow", chinese: "彩虹" },
+            { word: "rainy", chinese: "下雨的" },
+            { word: "raise", chinese: "舉起,養育" },
+            { word: "rat", chinese: "(大)老鼠,鼠輩" },
+            { word: "read", chinese: "讀" },
+            { word: "ready", chinese: "準備好的" },
+            { word: "real", chinese: "真的" },
+            { word: "really", chinese: "真地" },
+            { word: "recorder", chinese: "錄音機" },
+            { word: "red", chinese: "紅色(的)" },
+            { word: "refrigerator", chinese: "冰箱" },
+            { word: "remember", chinese: "記得" },
+            { word: "repeat", chinese: "重複" },
+            { word: "reporter", chinese: "記者" },
+            { word: "rest", chinese: "休息" },
+            { word: "restaurant", chinese: "餐館" },
+            { word: "restroom", chinese: "洗手間" },
+            { word: "rice", chinese: "米飯" },
+            { word: "rich", chinese: "有錢的" },
+            { word: "ride", chinese: "騎" },
+            { word: "right", chinese: "右邊" },
+            { word: "ring", chinese: "戒指" },
+            { word: "river", chinese: "河" },
+            { word: "road", chinese: "道路" },
+            { word: "robot", chinese: "機器人" },
+            { word: "ROC", chinese: "中華民國" },
+            { word: "rock", chinese: "岩石" },
+            { word: "roll", chinese: "滾" },
+            { word: "room", chinese: "房間" },
+            { word: "roller-blade", chinese: "溜冰" },
+            { word: "rope", chinese: "繩子" },
+            { word: "rose", chinese: "玫瑰" },
+            { word: "round", chinese: "圓形的" },
+            { word: "row", chinese: "划(船)" },
+            { word: "rule", chinese: "規則" },
+            { word: "ruler", chinese: "尺" },
+            { word: "run", chinese: "跑" },
+            { word: "sad", chinese: "悲傷的" },
+            { word: "safe", chinese: "安全的" },
+            { word: "sail", chinese: "航行" },
+            { word: "salad", chinese: "沙拉" },
+            { word: "sale", chinese: "出售" },
+            { word: "salesman", chinese: "推銷員" },
+            { word: "salt", chinese: "鹽" },
+            { word: "same", chinese: "相同的" },
+            { word: "sandwich", chinese: "三明治" },
+            { word: "Saturday", chinese: "星期六" },
+            { word: "sacred", chinese: "神聖的" },
+            { word: "save", chinese: "節省,挽救" },
+            { word: "say", chinese: "說" },
+            { word: "school", chinese: "學校" },
+            { word: "science", chinese: "科學" },
+            { word: "scooter", chinese: "速克達機車" },
+            { word: "screen", chinese: "螢幕" },
+            { word: "sea", chinese: "海" },
+            { word: "season", chinese: "季節" },
+            { word: "seat", chinese: "座位" },
+            { word: "second", chinese: "第二(的)" },
+            { word: "secretary", chinese: "秘書" },
+            { word: "see", chinese: "看" },
+            { word: "seed", chinese: "種子" },
+            { word: "seesaw", chinese: "蹺蹺板" },
+            { word: "seldom", chinese: "很少" },
+            { word: "sell", chinese: "賣" },
+            { word: "send", chinese: "寄" },
+            { word: "senior high school", chinese: "高中" },
+            { word: "sentence", chinese: "句子" },
+            { word: "September", chinese: "九月" },
+            { word: "serious", chinese: "嚴重的" },
+            { word: "(TV) set", chinese: "(電視)機" },
+            { word: "seven", chinese: "七" },
+            { word: "seventeen", chinese: "十七" },
+            { word: "seventeenth", chinese: "第十七(的)" },
+            { word: "seventh", chinese: "第七(的)" },
+            { word: "seventy", chinese: "七十" },
+            { word: "several", chinese: "幾個的" },
+            { word: "shake", chinese: "搖動" },
+            { word: "shall", chinese: "將會,好嗎?" },
+            { word: "shape", chinese: "形狀" },
+            { word: "share", chinese: "分享" },
+            { word: "shark", chinese: "鯊魚" },
+            { word: "she", chinese: "她" },
+            { word: "sheep", chinese: "綿羊" },
+            { word: "ship", chinese: "船" },
+            { word: "shirt", chinese: "襯衫" },
+            { word: "shoe(s)", chinese: "鞋子" },
+            { word: "shop", chinese: "商店" },
+            { word: "shopkeeper", chinese: "店主" },
+            { word: "short", chinese: "短的" },
+            { word: "shorts", chinese: "短褲" },
+            { word: "should", chinese: "應該" },
+            { word: "shoulder", chinese: "肩膀" },
+            { word: "shout", chinese: "喊叫" },
+            { word: "show", chinese: "指示,表演" },
+            { word: "shy", chinese: "害羞的" },
+            { word: "sick", chinese: "生病的" },
+            { word: "side", chinese: "旁邊,邊,面" },
+            { word: "sidewalk", chinese: "人行道" },
+            { word: "sight", chinese: "視力" },
+            { word: "sign", chinese: "標誌" },
+            { word: "simple", chinese: "簡單的" },
+            { word: "since", chinese: "自從" },
+            { word: "sing", chinese: "唱歌" },
+            { word: "singer", chinese: "歌手" },
+            { word: "sir", chinese: "先生" },
+            { word: "sister", chinese: "姊妹" },
+            { word: "sit", chinese: "坐" },
+            { word: "six", chinese: "六" },
+            { word: "sixteen", chinese: "十六" },
+            { word: "sixteenth", chinese: "第十六〈的〉" },
+            { word: "sixth", chinese: "第六〈的〉" },
+            { word: "sixty", chinese: "六十" },
+            { word: "size", chinese: "尺寸" },
+            { word: "skate", chinese: "溜冰" },
+            { word: "skirt", chinese: "裙子" },
+            { word: "sky", chinese: "天空" },
+            { word: "sleep", chinese: "睡覺" },
+            { word: "slide", chinese: "滑坡,滑動" },
+            { word: "slim", chinese: "苗條的" },
+            { word: "slow", chinese: "慢的" },
+            { word: "small", chinese: "小的" },
+            { word: "smart", chinese: "聰明的" },
+            { word: "smell", chinese: "聞起來" },
+            { word: "smile", chinese: "微笑" },
+            { word: "smoke", chinese: "煙霧,抽菸" },
+            { word: "snack", chinese: "點心" },
+            { word: "snake", chinese: "蛇" },
+            { word: "snow", chinese: "下雪" },
+            { word: "snowman", chinese: "雪人" },
+            { word: "snowy", chinese: "下雪的" },
+            { word: "so", chinese: "如此地" },
+            { word: "soccer", chinese: "足球" },
+            { word: "socks", chinese: "襪子" },
+            { word: "sofa", chinese: "沙發" },
+            { word: "soldier", chinese: "軍人" },
+            { word: "some", chinese: "一些" },
+            { word: "someone", chinese: "某人" },
+            { word: "something", chinese: "某事" },
+            { word: "sometimes", chinese: "有時候" },
+            { word: "somewhere", chinese: "某處" },
+            { word: "son", chinese: "兒子" },
+            { word: "song", chinese: "歌曲" },
+            { word: "soon", chinese: "不久,即將" },
+            { word: "sore", chinese: "疼痛的" },
+            { word: "sorry", chinese: "抱歉〈的〉" },
+            { word: "sound", chinese: "聲音,聽起來" },
+            { word: "soup", chinese: "湯" },
+            { word: "south", chinese: "南方" },
+            { word: "space", chinese: "空間" },
+            { word: "spaghetti", chinese: "義大利麵" },
+            { word: "speak", chinese: "說" },
+            { word: "special", chinese: "特別的" },
+            { word: "spell", chinese: "拼字" },
+            { word: "spend", chinese: "花(錢,時間)" },
+            { word: "spider", chinese: "蜘蛛" },
+            { word: "spoon", chinese: "湯匙" },
+            { word: "sport", chinese: "運動" },
+            { word: "spring", chinese: "春天" },
+            { word: "square", chinese: "正方形的" },
+            { word: "stairs", chinese: "樓梯" },
+            { word: "stamp", chinese: "郵票" },
+            { word: "stand", chinese: "站立" },
+            { word: "star", chinese: "星星" },
+            { word: "start", chinese: "開始" },
+            { word: "station", chinese: "車站,站,局" },
+            { word: "stay", chinese: "停留" },
+            { word: "steak", chinese: "(牛)排" },
+            { word: "still", chinese: "仍然" },
+            { word: "stomach", chinese: "胃" },
+            { word: "stop", chinese: "停" },
+            { word: "store", chinese: "商店" },
+            { word: "straight", chinese: "直的" },
+            { word: "story", chinese: "故事" },
+            { word: "strange", chinese: "奇怪的" },
+            { word: "stranger", chinese: "陌生人" },
+            { word: "strawberry", chinese: "草莓" },
+            { word: "street", chinese: "街道" },
+            { word: "strong", chinese: "強壯的" },
+            { word: "student", chinese: "學生" },
+            { word: "study", chinese: "研讀,學習" },
+            { word: "stupid", chinese: "笨的" },
+            { word: "subject", chinese: "科目" },
+            { word: "successful", chinese: "成功的" },
+            { word: "sugar", chinese: "糖" },
+            { word: "summer", chinese: "夏天" },
+            { word: "sun", chinese: "太陽" },
+            { word: "Sunday", chinese: "星期日" },
+            { word: "sunny", chinese: "晴朗的" },
+            { word: "supermarket", chinese: "超級市場" },
+            { word: "sure", chinese: "確定的" },
+            { word: "surf", chinese: "衝浪" },
+            { word: "surprise", chinese: "使…驚訝" },
+            { word: "surprised", chinese: "感到驚訝的" },
+            { word: "sweater", chinese: "毛衣" },
+            { word: "sweet", chinese: "甜的" },
+            { word: "swim", chinese: "游泳" },
+            { word: "swing", chinese: "鞦韆,搖擺" },
+            { word: "table", chinese: "桌子" },
+            { word: "tail", chinese: "尾巴" },
+            { word: "Taiwan", chinese: "臺灣" },
+            { word: "take", chinese: "拿" },
+            { word: "talk", chinese: "說話" },
+            { word: "tall", chinese: "高的" },
+            { word: "tape", chinese: "錄音帶" },
+            { word: "taste", chinese: "品嚐" },
+            { word: "taxi", chinese: "計程車" },
+            { word: "tea", chinese: "茶" },
+            { word: "teach", chinese: "教導" },
+            { word: "teacher", chinese: "教師" },
+            { word: "team", chinese: "團隊" },
+            { word: "teenager", chinese: "青少年" },
+            { word: "telephone", chinese: "電話" },
+            { word: "television", chinese: "電視" },
+            { word: "tell", chinese: "告訴" },
+            { word: "temple", chinese: "寺廟" },
+            { word: "ten", chinese: "十" },
+            { word: "tennis", chinese: "網球" },
+            { word: "tenth", chinese: "第十〈的〉" },
+            { word: "terrible", chinese: "可怕的" },
+            { word: "test", chinese: "考試,測試" },
+            { word: "than", chinese: "比…" },
+            { word: "thank", chinese: "謝謝" },
+            { word: "that", chinese: "那個" },
+            { word: "the", chinese: "這/那" },
+            { word: "theater", chinese: "戲院" },
+            { word: "then", chinese: "那時" },
+            { word: "there", chinese: "那裡" },
+            { word: "these", chinese: "這些" },
+            { word: "they", chinese: "他們" },
+            { word: "thick", chinese: "厚的" },
+            { word: "thin", chinese: "瘦的" },
+            { word: "thing", chinese: "事情" },
+            { word: "think", chinese: "想,思考" },
+            { word: "third", chinese: "第三〈的〉" },
+            { word: "thirsty", chinese: "口渴的" },
+            { word: "thirteen", chinese: "十三" },
+            { word: "thirteenth", chinese: "第十三" },
+            { word: "thirty", chinese: "三十" },
+            { word: "this", chinese: "這個" },
+            { word: "throat", chinese: "喉嚨" },
+            { word: "throw", chinese: "丟" },
+            { word: "those", chinese: "那些" },
+            { word: "though", chinese: "雖然" },
+            { word: "thousand", chinese: "千" },
+            { word: "three", chinese: "三" },
+            { word: "Thursday", chinese: "星期四" },
+            { word: "ticket", chinese: "票券" },
+            { word: "tidy", chinese: "整潔的" },
+            { word: "tiger", chinese: "老虎" },
+            { word: "tie", chinese: "領帶,捆,繫" },
+            { word: "time", chinese: "時間" },
+            { word: "tired", chinese: "疲倦的" },
+            { word: "to", chinese: "到" },
+            { word: "toast", chinese: "土司,烘烤" },
+            { word: "today", chinese: "今天" },
+            { word: "toe", chinese: "腳趾" },
+            { word: "together", chinese: "一起" },
+            { word: "tomato", chinese: "番茄" },
+            { word: "tomorrow", chinese: "明天" },
+            { word: "tonight", chinese: "今晚" },
+            { word: "too", chinese: "也,太..." },
+            { word: "tooth", chinese: "牙齒" },
+            { word: "top", chinese: "頂端" },
+            { word: "total", chinese: "總計" },
+            { word: "touch", chinese: "碰觸" },
+            { word: "towel", chinese: "毛巾" },
+            { word: "town", chinese: "城鎮" },
+            { word: "toy", chinese: "玩具" },
+            { word: "traffic", chinese: "交通" },
+            { word: "train", chinese: "火車" },
+            { word: "trash", chinese: "垃圾" },
+            { word: "treat", chinese: "請客,對待" },
+            { word: "tree", chinese: "樹" },
+            { word: "trick", chinese: "惡作劇" },
+            { word: "trip", chinese: "(短程)旅行" },
+            { word: "trouble", chinese: "麻煩" },
+            { word: "truck", chinese: "卡車" },
+            { word: "true", chinese: "真實的" },
+            { word: "try", chinese: "嘗試" },
+            { word: "T-shirt", chinese: "T恤" },
+            { word: "tub", chinese: "浴缸,洗澡" },
+            { word: "Tuesday", chinese: "星期二" },
+            { word: "turkey", chinese: "火雞" },
+            { word: "turn", chinese: "轉動,轉彎" },
+            { word: "turtle", chinese: "烏龜" },
+            { word: "twelfth", chinese: "第十二(的)" },
+            { word: "twelve", chinese: "十二" },
+            { word: "twenty", chinese: "二十" },
+            { word: "twentieth", chinese: "第二十(的)" },
+            { word: "twice", chinese: "兩次" },
+            { word: "two", chinese: "二" },
+            { word: "type", chinese: "打字" },
+            { word: "typhoon", chinese: "颱風" },
+            { word: "umbrella", chinese: "雨傘" },
+            { word: "uncle", chinese: "伯(叔)" },
+            { word: "under", chinese: "在…之下" },
+            { word: "understand", chinese: "了解" },
+            { word: "unhappy", chinese: "不快樂的" },
+            { word: "uniform", chinese: "制服" },
+            { word: "until", chinese: "直到" },
+            { word: "up", chinese: "向上" },
+            { word: "USA", chinese: "美國" },
+            { word: "use", chinese: "使用" },
+            { word: "useful", chinese: "有用的" },
+            { word: "usually", chinese: "通常" },
+            { word: "vacation", chinese: "假期" },
+            { word: "vegetable", chinese: "蔬菜" },
+            { word: "very", chinese: "非常" },
+            { word: "vest", chinese: "背心" },
+            { word: "video", chinese: "錄影帶" },
+            { word: "violin", chinese: "小提琴" },
+            { word: "visit", chinese: "參觀" },
+            { word: "voice", chinese: "聲音" },
+            { word: "wait", chinese: "等待" },
+            { word: "waiter", chinese: "男服務生" },
+            { word: "waitress", chinese: "女服務生" },
+            { word: "wake", chinese: "醒來" },
+            { word: "walk", chinese: "走路" },
+            { word: "wall", chinese: "牆壁" },
+            { word: "wallet", chinese: "皮夾" },
+            { word: "want", chinese: "想要" },
+            { word: "warm", chinese: "溫暖的" },
+            { word: "wash", chinese: "清洗" },
+            { word: "watch", chinese: "看" },
+            { word: "water", chinese: "水" },
+            { word: "watermelon", chinese: "西瓜" },
+            { word: "wave", chinese: "波浪" },
+            { word: "way", chinese: "道路,方法" },
+            { word: "we", chinese: "我們" },
+            { word: "weak", chinese: "弱的" },
+            { word: "wear", chinese: "穿" },
+            { word: "weather", chinese: "天氣" },
+            { word: "Wednesday", chinese: "星期三" },
+            { word: "week", chinese: "星期" },
+            { word: "weekend", chinese: "週末" },
+            { word: "welcome", chinese: "受歡迎的" },
+            { word: "well", chinese: "好地" },
+            { word: "west", chinese: "西方" },
+            { word: "wet", chinese: "濕的" },
+            { word: "whale", chinese: "鯨魚" },
+            { word: "what", chinese: "什麼" },
+            { word: "when", chinese: "何時" },
+            { word: "where", chinese: "何處" },
+            { word: "whether", chinese: "是否" },
+            { word: "which", chinese: "哪一個" },
+            { word: "white", chinese: "白色(的)" },
+            { word: "who", chinese: "誰" },
+            { word: "whose", chinese: "誰的" },
+            { word: "why", chinese: "為什麼" },
+            { word: "wife", chinese: "妻子" },
+            { word: "will", chinese: "將會..." },
+            { word: "win", chinese: "贏" },
+            { word: "wind", chinese: "風" },
+            { word: "window", chinese: "窗戶" },
+            { word: "windy", chinese: "多風的" },
+            { word: "winter", chinese: "冬天" },
+            { word: "wise", chinese: "明智的" },
+            { word: "wish", chinese: "祝福…" },
+            { word: "with", chinese: "和" },
+            { word: "without", chinese: "沒有" },
+            { word: "woman", chinese: "女人" },
+            { word: "wonderful", chinese: "極好的" },
+            { word: "word", chinese: "字" },
+            { word: "work", chinese: "工作" },
+            { word: "workbook", chinese: "作業本" },
+            { word: "worker", chinese: "工人" },
+            { word: "world", chinese: "世界" },
+            { word: "worry", chinese: "擔心" },
+            { word: "write", chinese: "寫" },
+            { word: "writer", chinese: "作家" },
+            { word: "wrong", chinese: "錯誤的" },
+            { word: "yard", chinese: "庭院" },
+            { word: "year", chinese: "年" },
+            { word: "yellow", chinese: "黃色(的)" },
+            { word: "yes", chinese: "是" },
+            { word: "yesterday", chinese: "昨天" },
+            { word: "yet", chinese: "尚未" },
+            { word: "you", chinese: "你(們)" },
+            { word: "young", chinese: "年輕的" },
+            { word: "yummy", chinese: "好吃的" },
+            { word: "zebra", chinese: "斑馬" },
+            { word: "zero", chinese: "零" },
+            { word: "zoo", chinese: "動物園" }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timerInterval;
+        const totalQuestions = 10;
+        const questionTime = 30; // 每題 30 秒
+        let missingIndices = []; // 當前題目隱藏的字母位置（陣列）
+        let results = []; // 記錄每題答案結果
+        let randomOrder = []; // 儲存隨機題目順序
+
+        // 取得 DOM 元素
+        const startBtn = document.getElementById('startBtn');
+        const gameDiv = document.getElementById('game');
+        const questionNumberP = document.getElementById('questionNumber');
+        const chinesePromptP = document.getElementById('chinesePrompt');
+        const englishPromptP = document.getElementById('englishPrompt');
+        const timerSpan = document.getElementById('timer');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultDiv = document.getElementById('result');
+        const reviewDiv = document.getElementById('review');
+
+        // 綁定事件
+        startBtn.addEventListener('click', startGame);
+        submitBtn.addEventListener('click', submitAnswer);
+
+        // 全域鍵盤監聽：若有缺漏輸入框，則自動聚焦第一個空白的輸入框並輸入字母
+        document.addEventListener('keydown', function (e) {
+            if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
+                const inputs = document.querySelectorAll('#englishPrompt input');
+                if (inputs.length > 0) {
+                    let target = null;
+                    for (let input of inputs) {
+                        if (!input.value) {
+                            target = input;
+                            break;
+                        }
+                    }
+                    if (target) {
+                        target.focus();
+                        target.value = e.key;
+                        e.preventDefault();
+                    }
+                }
+            }
+        });
+
+        // 洗牌函數 (Fisher-Yates shuffle)
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 開始遊戲：初始化參數、產生隨機題目順序、隱藏開始區、顯示遊戲區
+        function startGame() {
+            currentQuestion = 0;
+            score = 0;
+            results = [];
+            resultDiv.innerHTML = "";
+            reviewDiv.innerHTML = "";
+            resultDiv.classList.remove("win");
+            // 產生隨機順序（從 0 到 words.length-1 隨機排列，取前 totalQuestions 個）
+            randomOrder = Array.from(Array(words.length).keys());
+            shuffle(randomOrder);
+            randomOrder = randomOrder.slice(0, totalQuestions);
+
+            document.getElementById('start').style.display = "none";
+            gameDiv.style.display = "block";
+            nextQuestion();
+        }
+
+        // 顯示下一題
+        function nextQuestion() {
+            if (currentQuestion >= totalQuestions) {
+                endGame();
+                return;
+            }
+
+            // 根據隨機順序取得題目
+            const currentObj = words[randomOrder[currentQuestion]];
+            const currentWord = currentObj.word;
+
+            questionNumberP.innerText = "題目 " + (currentQuestion + 1) + " / " + totalQuestions;
+            chinesePromptP.innerText = "中文提示: " + currentObj.chinese;
+
+            // 取得所有非空格字母的索引
+            let availableIndices = [];
+            for (let i = 0; i < currentWord.length; i++) {
+                if (currentWord[i] !== " ") {
+                    availableIndices.push(i);
+                }
+            }
+            // 決定隱藏字母的數量：至少 1 個，最多 Math.min(5, availableIndices.length - 1)
+            const maxHidden = availableIndices.length > 1 ? Math.min(5, availableIndices.length - 1) : 1;
+            const hiddenCount = Math.floor(Math.random() * maxHidden) + 1;
+
+            // 隨機挑選不重複的隱藏位置（僅從非空格索引中選取）
+            availableIndices.sort(() => Math.random() - 0.5);
+            missingIndices = availableIndices.slice(0, hiddenCount).sort((a, b) => a - b);
+
+            // 建立英文提示：若該位置為空格則直接輸出空格，
+            // 若該位置在 missingIndices 則輸出 input，否則輸出 span 顯示字母
+            englishPromptP.innerHTML = "英文拼字: ";
+            for (let i = 0; i < currentWord.length; i++) {
+                if (currentWord[i] === " ") {
+                    englishPromptP.innerHTML += '<span>&nbsp;&nbsp;</span>';
+                } else if (missingIndices.indexOf(i) !== -1) {
+                    englishPromptP.innerHTML += '<input type="text" class="missingInput" maxlength="1" style="width:30px; display:inline-block;" />';
+                } else {
+                    englishPromptP.innerHTML += '<span>' + currentWord[i] + '</span>';
+                }
+            }
+
+            // 為每個缺漏輸入框綁定 Enter 鍵事件，當所有輸入框都有值時送出答案
+            const inputs = document.querySelectorAll('#englishPrompt input');
+            inputs.forEach(input => {
+                input.addEventListener('keyup', function (e) {
+                    if (e.key === "Enter") {
+                        let allFilled = true;
+                        inputs.forEach(inp => {
+                            if (!inp.value) { allFilled = false; }
+                        });
+                        if (allFilled) {
+                            submitAnswer();
+                        }
+                    }
+                });
+            });
+
+            // 聚焦第一個空白的輸入框
+            const firstInput = document.querySelector('#englishPrompt input');
+            if (firstInput) {
+                firstInput.focus();
+            }
+
+            // 啟動計時器
+            let timeLeft = questionTime;
+            timerSpan.innerText = timeLeft;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(function () {
+                timeLeft--;
+                timerSpan.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    // 時間到，記錄答案（未填的視為空白）
+                    recordAnswer();
+                    currentQuestion++;
+                    nextQuestion();
+                }
+            }, 1000);
+        }
+
+        // 記錄當前題目的答案，並儲存缺漏位置與各輸入框的內容
+        function recordAnswer() {
+            const currentObj = words[randomOrder[currentQuestion]];
+            const currentWord = currentObj.word;
+            const inputs = document.querySelectorAll('#englishPrompt input');
+            let userAnswers = [];
+            let isCorrect = true;
+            inputs.forEach((input, index) => {
+                const letter = input.value.trim().toLowerCase();
+                userAnswers.push(letter);
+                // 依照 missingIndices 的順序取得正確答案
+                const correctLetter = currentWord[missingIndices[index]].toLowerCase();
+                if (letter !== correctLetter) {
+                    isCorrect = false;
+                }
+            });
+            if (isCorrect) { score += 10; }
+            results.push({
+                chinese: currentObj.chinese,
+                word: currentObj.word,
+                missingIndices: missingIndices.slice(),  // 儲存當時的缺漏位置
+                userAnswers: userAnswers.slice(),
+                correct: isCorrect
+            });
+        }
+
+        // 提交答案
+        function submitAnswer() {
+            clearInterval(timerInterval);
+            recordAnswer();
+            currentQuestion++;
+            nextQuestion();
+        }
+
+        // 結束遊戲，顯示分數與每題檢視，並標出使用者回答錯誤的字母
+        function endGame() {
+            gameDiv.style.display = "none";
+            resultDiv.innerHTML = "遊戲結束！你的分數: " + score + " 分";
+            if (score === totalQuestions * 10) {
+                resultDiv.classList.add("win");
+            }
+
+            let reviewHTML = "<h2>答題檢視</h2>";
+            results.forEach((res, index) => {
+                // 依據原單字、缺漏位置與使用者答案還原當時題目與回答
+                let questionDisplay = "";
+                let answerDisplay = "";
+                for (let i = 0; i < res.word.length; i++) {
+                    if (res.word[i] === " ") {
+                        questionDisplay += "&nbsp;&nbsp;";
+                        answerDisplay += "&nbsp;&nbsp;";
+                    } else if (res.missingIndices.includes(i)) {
+                        questionDisplay += "_ ";
+                        const pos = res.missingIndices.indexOf(i);
+                        let userLetter = res.userAnswers[pos] || "";
+                        if (userLetter.toLowerCase() !== res.word[i].toLowerCase()) {
+                            answerDisplay += '<span style="color:red;">' + (userLetter || "-") + "</span> ";
+                        } else {
+                            answerDisplay += userLetter + " ";
+                        }
+                    } else {
+                        questionDisplay += res.word[i] + " ";
+                        answerDisplay += res.word[i] + " ";
+                    }
+                }
+                reviewHTML += '<div class="review-item ' + (res.correct ? "" : "wrong") + '">';
+                reviewHTML += "題目 " + (index + 1) + " - 中文提示: " + res.chinese + "<br>";
+                reviewHTML += "當時題目: " + questionDisplay + "<br>";
+                reviewHTML += "您的回答: " + answerDisplay + "<br>";
+                reviewHTML += "正確答案: " + res.word;
+                reviewHTML += "</div>";
+            });
+            reviewDiv.innerHTML = reviewHTML;
+            document.getElementById('start').style.display = "block";
+            startBtn.innerText = "再玩一次";
+        }
+    </script>
+</body>
+
+</html>
