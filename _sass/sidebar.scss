@@ -110,11 +110,14 @@
         display:block;
         padding:6px;
         transition:.3s;
+		line-height: 16px; // 使文字行高配合 icon 高度
 
-        svg {
-          width:16px;
-          fill:dimgrey;
-        }
+        svg,
+		img {
+			vertical-align: middle;
+			width: 16px;
+			height: 16px;
+		}
 
         &:hover{
           svg { fill:orange; }
