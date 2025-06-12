@@ -4,12 +4,12 @@ logo_img: "/assets/img/favicon.png"
 profile_img: "/assets/img/profile.webp"
 
 # Social Links
-email: example@gmail.com
+email:
 github_username: cit-hall-43
-twitter_username: twitter
-instagram_username: instagram
-linkedin_username: linkedin
-facebook_username: facebook
+twitter_username:
+instagram_username:
+linkedin_username:
+facebook_username:
 
 # External API
 giscus_repo: "cit-hall-43/cit-hall-43.github.io"
