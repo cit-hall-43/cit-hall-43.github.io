@@ -1,6 +1,7 @@
 # Taipei Church Hall 43
 
-This is the official website for the Taipei Church Hall 43, a local church community. The website is built with Jekyll and hosted on GitHub Pages.
+This is the official website for the Taipei Church Hall 43, 1-4 District
+, a local church community. The website is built with Jekyll and hosted on GitHub Pages.
 
 ## Features
 
