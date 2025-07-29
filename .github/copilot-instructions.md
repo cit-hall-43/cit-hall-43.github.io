@@ -18,6 +18,7 @@ This repository is a Jekyll-based static site for Taipei Church Hall 43, hosted 
   3. Start the server with `bundle exec jekyll serve` (site at `http://localhost:4000`).
 - **No Automated Tests:** This repo does not use automated tests or CI/CD pipelines.
 - **Deployment:** Pushed changes to `main` are automatically published via GitHub Pages.
+- **Git Commit Messages**: All commit messages must follow the Conventional Commits format (see https://www.conventionalcommits.org/).
 
 ## Project-Specific Conventions
 - **Language:** Content is primarily in Traditional Chinese; filenames and folder names may use Chinese characters.
