@@ -11,6 +11,9 @@ vendor
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Copilot
+**/prompts/
+
 # GEMINI
 GEMINI.md
 CHANGELOG.md
